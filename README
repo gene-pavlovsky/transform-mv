@@ -1,0 +1,156 @@
+transform-mv
+Originally hosted on http://tmv.sourceforge.net  
+Author: Gene Pavlovsky <gene.pavlovsky@gmail.com>
+
+This is an old tool of mine that I still use daily.
+It could use some improvements and minor bug fixes.
+One day I might decide to put some more love in it.
+
+1. Introduction
+
+Renames files/directories according to sed script(s). Optionally,
+converts pathnames to upper/lower-case, from/to the specified
+character set, or even pipes them through arbitrary command(s).
+
+2. Documentation
+
+The 'tmv' shell script applies a number of transformations to a list
+of pathnames (files/directories). The list of pathnames is specified
+on a command line. Pathnames will also be read from standard input
+in case none were found on command line, or '-' was specified on
+command line. Transformations are commands that read their input,
+process it, and output the results. This architecture allows for
+several built-in transformations and a multitude of external ones,
+by specifying arbitrary command(s) to process the pathnames.
+Please note that only the last slash-delimited portion of the name
+is transformed (e.g. 'tmv -l /A/B' will move '/A/B' to '/A/b').
+
+Usage: tmv [options] pathname [pathname]*
+
+2.1. Transformation using sed
+
+This transformation, the most flexible of the built-in ones,
+uses sed to perform a sed script on the pathnames.
+
+Options:
+
+  -e SCRIPT, --expression=SCRIPT
+        add the SCRIPT to the sed script
+  -f FILE, --file=FILE
+        add the contents of FILE to the sed script
+  -r, --regexp-extended
+        use extended regular expressions in the sed script
+
+All these options are taken as-is from sed itself. Like sed, multiple
+scripts can be specified. But, unlike sed, '-e/--expression' option
+must be specified even when using only one expression.
+
+Examples:
+
+  # For all files/directories in the current directory, change spaces to
+  # underscores, change sequences of several underscores to one underscore.
+  find . -depth | tmv -e 'y/ /_/' -e 's/_\{2,\}/_/g'
+
+2.2. Conversion to upper/lower-case
+
+Pathnames are converted to upper/lower-case using 'dd conv=[lu]case'.
+
+Options:
+
+  -l, --lcase
+        convert pathnames to lower case (using 'dd conv=lcase')
+  -u, --ucase
+        convert pathnames to upper case (using 'dd conv=ucase')
+
+I never use '--ucase', but I had to add it for the symmetry with '--lcase'.
+
+Examples:
+
+  # For all files/directories (not recursively) in new_music, convert
+  # pathnames to lowercase.
+  tmv -l new_music/*
+
+2.3. Character set conversion
+
+Pathnames are converted from one character set to another using iconv.
+
+Options:
+
+      --iconv=FROM:TO
+        convert pathnames from charset FROM to charset TO
+      --iconv=FROM
+        convert pathnames from charset FROM to locale (user) charset
+      --iconv=:TO
+        convert pathnames from locase (user) charset to charset TO
+
+Examples:
+
+  # For all file/directories in copy_of_joliet_cd_with_russian_pathnames,
+  # convert the pathnames' charset from CP1251 to locale (user) charset
+  find copy_of_joliet_cd_with_russian_pathnames -depth | tmv --iconv=cp1251
+
+2.4. Transformation with external command(s)
+
+Pathnames can be transformed by arbitrary external command(s).
+
+Options:
+
+      --pipe=COMMAND
+        pipe pathnames through COMMAND; several '--pipe' options can be
+        specified; commands will be executed in order of their specification
+
+Examples:
+
+  # Actually, all processing command useful for me are already done as
+  # built-in transformations, so I'll give an example with sed again.
+  # For all files in the current directory, change the extension from
+  # 'htm' to 'html'. Nothing will be done with files not ending with 'htm'.
+  find . -maxdepth 1 -type f | tmv --pipe='sed "s/htm$/html/"'
+
+2.5. Other options
+
+  -b, --backup
+        mv is always run with '-f' option, so if you are afraid tmv might
+        overwrite some files, you can (with GNU version of mv) use '-b'
+        option; for details see mv(1)
+  -q, --quiet
+        by default, verbose mode is on, displaying some progress information,
+        and the names of source/destination files; this options makes tmv silent
+  -n, --dry-run
+        no files are renamed, but source/destination files are printed (if
+        not '--quiet', which is pointless in conjunction with this option);
+        this mode is useful when you're not sure about the correctness of your
+        sed script(s), don't know the FROM charset and are just guessing etc.
+
+2.6. Options processing notes
+
+If you want to specify non-option arguments starting with '-', write them after
+a '--', after which all the remaining arguments are treated as options.
+
+2.7. Little scripts built around tmv
+
+2.7.1. tmv-ul
+
+Usage: tmv-ul path [path]*
+
+'tmv-ul' script finds all files/directories in given path(s), and
+change spaces to underscores, converting text to lower case. Accepts
+no options (not even '--help' and '--version').
+
+2.7.2. tmv-strip
+
+Usage: tmv-strip string
+
+'tmv-strip' script finds all files in the current directory, containing
+a given string, and removes it from them. Accepts no options (not even
+'--help' and '--version').
+
+2.8. Reporting bugs / Sending patches / Requesting enhancements
+
+If you think you've found a bug, written a patch or want a new
+feature badly, feel free to mail me at <gene.pavlovsky@gmail.com>.
+Be sure to set the subject to 'tmv: bugreport: blah blah blah',
+'tmv: patch: blah blah blah' or 'tmv: rfe: blah blah blah'
+for bugreport, patch or RFE respectively.
+When writing bugreports, be sure to include as much information as
+possible. Be absolutely sure to write how to reproduce the bug.

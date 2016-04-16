@@ -1,0 +1,8 @@
+Installation of tmv is straightforward: as tmv is written completely
+in shell, there is no configure script or makefile.
+
+To install, run ./install
+To uninstall, run ./uninstall
+
+The install/uninstall script supports several configure-like options, you
+can find them out by issuing a "./install --help" command.
